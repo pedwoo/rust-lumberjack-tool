@@ -93,3 +93,53 @@ pub fn sell_wood(robot: &mut impl Runnable, world: &mut World, quantity: usize) 
     }
     action_result
 }
+
+// if function returns (65535, 65535) no matching content has been found
+// market:bool is set to true if looking for a market, else it will look for a tree
+fn find_stuff(robot:Bot, mut world:&mut robotics_lib::world::World, market:bool) -> (i32, i32) {
+    let mut self_x = robot.get_coordinate().get_row() as i32;
+    let mut self_y = robot.get_coordinate().get_col() as i32;
+
+    let r_map = robot_map(&mut world).unwrap();
+
+    let mut spiral_radius = 1;
+    let mut current_tile = r_map[self_x][self_y];
+
+    for i in 0..3 {
+        for _ in 0..spiral_radius {
+            match i {
+                0 => {
+                    self_x += 1
+                },
+                1 => {
+                    self_y += 1
+                },
+                2 => {
+                    self_x -= 1
+                },
+                3 => {
+                    self_y -= 1
+                },
+                _ => {}
+            }
+            current_tile = r_map[self_x][self_y];
+
+            match current_tile.content {
+                Content::Tree(_) => {
+                    if !market {
+                        return (self_x, self_y)
+                    }
+                },
+                Content::Market(_) => {
+                    if market {
+                        return (self_x, self_y)
+                    }
+                }
+                _ => {}
+            }
+        }
+
+        spiral_radius += 1;
+    }
+    return (65535, 65535)
+}
